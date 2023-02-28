@@ -6,22 +6,29 @@ import { generateDatesFromYearBeginning } from "../utils/generateDatesFromYearBe
 import {api} from "../lib/axios";
 import { useEffect, useState } from "react";
 import { Loading } from "../components/Loading";
+import dayjs from "dayjs";
 
 const weekDays = ["D", "S", "T", "Q", "Q", "S", "S"];
 const datesFromYearStart = generateDatesFromYearBeginning();
 const minimunSummaryDatesSizes = 18 * 5;
 const amountOfDaysToFill = minimunSummaryDatesSizes - datesFromYearStart.length;
 
+interface ISummary {
+  id: string;
+  date: string;
+  amount: number;
+  completed: number;
+}
+
 export function Home() {
   const [loading, setIsLoading] = useState(true);
-  const [summary, setSummary] = useState([]);
+  const [summary, setSummary] = useState<ISummary[] | null>([]);
   const { navigate } = useNavigation();
 
   async function fetchSummary(){
     try {
       setIsLoading(true);
       const response = await api.get('/summary');
-      console.log(response.data);
       setSummary(response.data);
     }catch(error){
       Alert.alert('Error', 'Error fetching habbit summary');
@@ -59,29 +66,40 @@ export function Home() {
           ))}
         </View>
 
-        <View className="flex-row flex-wrap">
-          <>
-            {datesFromYearStart.map((date) => {
-              return (
-                <HabitDay
-                  key={date.toISOString()}
-                  onPress={() =>
-                    navigate("habit", { date: date.toISOString() })
-                  }
-                />
-              );
-            })}
+        {
+          summary && 
+            <View className="flex-row flex-wrap">
+            <>
+              {
+                datesFromYearStart.map((date) => {
+                  const dayWithHabits = summary.find((day) => {
+                    return dayjs(date).isSame(day.date, 'day');
+                  })
 
-            {amountOfDaysToFill > 0 &&
-              Array.from({ length: amountOfDaysToFill }).map((_, index) => {
-                <View
-                  key={index}
-                  className="bg-zinc-900 rounded-lg border-2 m-1 border-zinc-800 opacity-40"
-                  style={{ width: DAY_SIZE, height: DAY_SIZE }}
-                />;
-              })}
-          </>
-        </View>
+                  return (<HabitDay
+                    key={date.toISOString()}
+                    date={date}
+                    amount={dayWithHabits?.amount}
+                    completed={dayWithHabits?.completed}
+                    onPress={() =>
+                      navigate("habit", { date: date.toISOString() })
+                    }
+                  />)
+                })
+              }
+
+              {amountOfDaysToFill > 0 &&
+                Array.from({ length: amountOfDaysToFill }).map((_, index) => {
+                  <View
+                    key={index}
+                    className="bg-zinc-900 rounded-lg border-2 m-1 border-zinc-800 opacity-40"
+                    style={{ width: DAY_SIZE, height: DAY_SIZE }}
+                  />;
+                })}
+            </>
+          </View>
+        }
+        
       </ScrollView>
     </View>
   );
