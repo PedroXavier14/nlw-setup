@@ -9,3 +9,5 @@ app.register(appRoutes);
 app.listen({
   port: 3333,
 });
+
+console.log('HTTP server running on port 3333');
