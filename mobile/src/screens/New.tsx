@@ -40,7 +40,7 @@ export function New() {
   async function handleCreateNewHabit(){
     try{
       if(!title.trim() || weekDays.length === 0) {
-        Alert.alert("New Habit", "Please fill the form");
+        return Alert.alert("New Habit", "Please fill the form");
       }
 
       await api.post("/habits", {
